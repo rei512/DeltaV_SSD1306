@@ -1,0 +1,16 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(platformio run:*)",
+      "Bash(pio run:*)",
+      "Bash(python -m platformio run)",
+      "Bash(python3:*)",
+      "Bash(pip install:*)",
+      "Bash(pip3 install:*)",
+      "Bash(curl:*)",
+      "Bash(sudo apt-get:*)",
+      "Bash(sudo apt-get install:*)"
+    ],
+    "deny": []
+  }
+}

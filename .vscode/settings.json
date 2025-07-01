@@ -1,6 +1,9 @@
 {
     "files.associations": {
         "debug.h": "c",
-        "stdint.h": "c"
-    }
+        "stdint.h": "c",
+        "ssd1306_hal.h": "c",
+        "ssd1306.h": "c"
+    },
+    "idf.pythonInstallPath": "C:\\Users\\igarashi\\.espressif\\tools\\idf-python\\3.11.2\\python.exe"
 }

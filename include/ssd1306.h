@@ -4,10 +4,7 @@
 #define SSD1306_WIDTH 128
 #define SSD1306_HEIGHT 32
 
-#include <stdint.h>
-
-#define SSD1306_WIDTH 128
-#define SSD1306_HEIGHT 64
+#define SSD1306_BUFFER_SIZE (SSD1306_WIDTH * SSD1306_HEIGHT / 8) // 1024 bytes for 128x64 OLED
 
 #define SSD1306_WRITE 0x00
 #define SSD1306_READ  0x01
@@ -76,6 +73,7 @@ void SSD1306_Buffer_swap(void);
 void SSD1306_Init(void);
 void SSD1306_Clear(void);
 void SSD1306_Update(void);
+void SSD1306_Update_Full(void);
 
 void SSD1306_DisplayOn(void);
 void SSD1306_DisplayOff(void);
@@ -85,6 +83,26 @@ void SSD1306_DisplayNormal(void);
 
 void SSD1306_DisplayInverse(void);
 
-void test(void);
+void SSD1306_DrawPixel(uint8_t x, uint8_t y, uint8_t color);
+void SSD1306_DrawLine(uint8_t x0, uint8_t y0, uint8_t x1, uint8_t y1, uint8_t color);
+void SSD1306_DrawRect(uint8_t x, uint8_t y, uint8_t width, uint8_t height, uint8_t color);
+void SSD1306_FillRect(uint8_t x, uint8_t y, uint8_t width, uint8_t height, uint8_t color);
+void SSD1306_DrawCircle(uint8_t x0, uint8_t y0, uint8_t radius, uint8_t color);
+void SSD1306_FillCircle(uint8_t x0, uint8_t y0, uint8_t radius, uint8_t color);
+void SSD1306_DrawEllipse(uint8_t x0, uint8_t y0, uint8_t x1, uint8_t y1, uint8_t color);
+void SSD1306_FillEllipse(uint8_t x0, uint8_t y0, uint8_t x1, uint8_t y1, uint8_t color);
+void SSD1306_DrawTriangle(uint8_t x0, uint8_t y0, uint8_t x1, uint8_t y1, uint8_t x2, uint8_t y2, uint8_t color);
+void SSD1306_FillTriangle(uint8_t x0, uint8_t y0, uint8_t x1, uint8_t y1, uint8_t x2, uint8_t y2, uint8_t color);
+void SSD1306_DrawRoundRect(uint8_t x0, uint8_t y0, uint8_t x1, uint8_t y1, uint8_t radius, uint8_t color);
+void SSD1306_FillRoundRect(uint8_t x0, uint8_t y0, uint8_t x1, uint8_t y1, uint8_t radius, uint8_t color);
+
+void SSD1306_DrawChar(uint8_t x, uint8_t y, char c, uint8_t color);
+void SSD1306_DrawString(uint8_t x, uint8_t y, const char *str, uint8_t color);
+void SSD1306_DrawBitmap(uint8_t x, uint8_t y, const uint8_t *bitmap, uint8_t width, uint8_t height, uint8_t color);
+
+
+
+void ssdtest1(void);
+void ssdtest2(void);
 
 #endif
