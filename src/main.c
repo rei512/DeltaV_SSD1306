@@ -33,6 +33,25 @@ void FunctionTest();
 void smooth_animation();
 void ClockTest();
 
+int pindirection = 0;
+int pindirection2 = 0;
+
+void GPIO_Toggle_INIT(void)
+{
+    GPIO_InitTypeDef GPIO_InitStructure = {0};
+
+    RCC_APB2PeriphClockCmd(RCC_APB2Periph_GPIOA, ENABLE);
+    GPIO_InitStructure.GPIO_Pin = GPIO_Pin_0;
+    GPIO_InitStructure.GPIO_Mode = GPIO_Mode_Out_PP;
+    GPIO_InitStructure.GPIO_Speed = GPIO_Speed_50MHz;
+    GPIO_Init(GPIOA, &GPIO_InitStructure);
+
+    GPIO_InitStructure.GPIO_Pin = GPIO_Pin_1;
+    GPIO_InitStructure.GPIO_Mode = GPIO_Mode_Out_PP;
+    GPIO_InitStructure.GPIO_Speed = GPIO_Speed_50MHz;
+    GPIO_Init(GPIOA, &GPIO_InitStructure);
+}
+
 /*********************************************************************
  * @fn      main
  *
@@ -50,6 +69,8 @@ int main(void)
     printf("SSD1306 OLED Test\r\n");
     printf("SSD1306_WIDTH:%d\r\n", SSD1306_WIDTH);
     printf("SSD1306_HEIGHT:%d\r\n", SSD1306_HEIGHT);
+    GPIO_Toggle_INIT();
+
     uint8_t str[] = "Ω1μ1℃01";
     for (int i = 0; i < sizeof(str); i++)
     {
@@ -65,9 +86,17 @@ int main(void)
 
     while (1)
     {
+        pindirection = 0;
+        pindirection2 = 0;
+        GPIO_WriteBit(GPIOA, GPIO_Pin_0, pindirection);
+        GPIO_WriteBit(GPIOA, GPIO_Pin_1, pindirection2);
         // FunctionTest();
         // Delay_Ms(5000);
         smooth_animation();
+        pindirection = 0;
+        pindirection2 = 0;
+        GPIO_WriteBit(GPIOA, GPIO_Pin_0, pindirection);
+        GPIO_WriteBit(GPIOA, GPIO_Pin_1, pindirection2);
         ClockTest();
     }
 }
@@ -324,20 +353,36 @@ void smooth_animation(void)
 
     while (frame < 300)
     { // Clear drawing buffer
+        GPIO_WriteBit(GPIOA, GPIO_Pin_0, 1);
+        GPIO_WriteBit(GPIOA, GPIO_Pin_1, 1);
+
         SSD1306_Clear();
+        GPIO_WriteBit(GPIOA, GPIO_Pin_1, 0);
+        GPIO_WriteBit(GPIOA, GPIO_Pin_1, 1);
 
         // Draw multiple animated objects
         int x = 64 + 30 * sin(frame * 0.1);
         int y = 32 + 20 * cos(frame * 0.1);
+        GPIO_WriteBit(GPIOA, GPIO_Pin_1, 0);
+        GPIO_WriteBit(GPIOA, GPIO_Pin_1, 1);
 
         SSD1306_FillCircle(x, y, 8, 1);
+        GPIO_WriteBit(GPIOA, GPIO_Pin_1, 0);
+        GPIO_WriteBit(GPIOA, GPIO_Pin_1, 1);
+
         SSD1306_DrawRect(20, 20, 80, 30, 1);
+        GPIO_WriteBit(GPIOA, GPIO_Pin_1, 0);
+        GPIO_WriteBit(GPIOA, GPIO_Pin_1, 1);
+
 
         // Single optimized update
         SSD1306_Update(); // Only changed regions transmitted
 
         frame++;
         // Delay_Ms(50);
+        
+        GPIO_WriteBit(GPIOA, GPIO_Pin_0, 0);
+        GPIO_WriteBit(GPIOA, GPIO_Pin_0, 1);
     }
 }
 
@@ -451,6 +496,7 @@ void ClockTest()
     // Animate for a few seconds to show time progression
     for (int i = 0; i < 200; i++)
     {
+        GPIO_WriteBit(GPIOA, GPIO_Pin_0, 1);
         // Delay_Ms(200);
 
         // Display time in HH:MM:SS format
@@ -529,9 +575,11 @@ void ClockTest()
         // Draw clock numbers (12, 3, 6, 9)
         SSD1306_DrawString(analog_center_x - 8, analog_center_y - analog_radius + 5, "12", 1);
         SSD1306_DrawString(analog_center_x + analog_radius - 11, analog_center_y - 3, "3", 1);
-        SSD1306_DrawString(analog_center_x-4, analog_center_y + analog_radius-12, "6", 1);
+        SSD1306_DrawString(analog_center_x - 4, analog_center_y + analog_radius - 12, "6", 1);
         SSD1306_DrawString(analog_center_x - analog_radius + 4, analog_center_y - 4, "9", 1);
-
+        GPIO_WriteBit(GPIOA, GPIO_Pin_1, 1);
         SSD1306_Update();
+        GPIO_WriteBit(GPIOA, GPIO_Pin_1, 0);
+        GPIO_WriteBit(GPIOA, GPIO_Pin_0, 0);
     }
 }
