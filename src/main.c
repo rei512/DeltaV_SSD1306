@@ -55,10 +55,6 @@ int main(void)
     SSD1306_Init();
     SSD1306_Clear();
     SSD1306_Update();
-
-    ssdtest1();
-    SSD1306_Update();
-    Delay_Ms(500);
     // ssdtest2();
     // SSD1306_Update();
     // Delay_Ms(500);
@@ -260,30 +256,58 @@ void TriangleTest()
 
 void StringTest()
 {
+    // Test 1: ASCII Characters (All printable characters 32-126)
     SSD1306_Clear();
-    SSD1306_DrawString(0, 0, "Hello, World!", 1);
+    SSD1306_DrawString(0,  0, "ASCII CHARACTERS", 1);
+    SSD1306_DrawString(0,  8, " !\"#$%&'()*+,-./", 1);
+    SSD1306_DrawString(0, 16, "0123456789:;<=>?", 1);
+    SSD1306_DrawString(0, 24, "@ABCDEFGHIJKLMNO", 1);
+    SSD1306_DrawString(0, 32, "PQRSTUVWXYZ[\\]^_", 1);
+    SSD1306_DrawString(0, 40, "`abcdefghijklmno", 1);
+    SSD1306_DrawString(0, 48, "pqrstuvwxyz{|}~ ", 1);
     SSD1306_Update();
-    SSD1306_DrawString(0, 10, "SSD1306 OLED", 1);
+    Delay_Ms(5000);
+
+    // Test 2: Extended UTF-8 Characters
+    SSD1306_Clear();
+    SSD1306_DrawString(0,  0, "UTF-8 EXTENDED:", 1);
+    SSD1306_DrawString(0,  8, "Greek Letters:", 1);
+    SSD1306_DrawString(0, 16, "ΑΒΓΔΕΖΗΘΙΚΛΜΝΞΟΠ", 1);
+    SSD1306_DrawString(0, 24, "ΡΣΤΥΦΧΨΩ", 1);
+    SSD1306_DrawString(0, 32, "αβγδεζηθικλμνξοπ", 1);
+    SSD1306_DrawString(0, 40, "ρστυφχψω", 1);
+    SSD1306_DrawString(0, 48, "Special Symbols:", 1);
+    SSD1306_DrawString(0, 56, "℃", 1);
     SSD1306_Update();
-    SSD1306_DrawString(0, 20, "Test String", 1);
+    Delay_Ms(5000);
+    
+    // Test 3: Use Cases (Practical Examples)
+    SSD1306_Clear();
+    SSD1306_DrawString(0,  0, "USE CASES:", 1);
+    SSD1306_DrawString(0,  8, "Temp: 23.5℃", 1);
+    SSD1306_DrawString(0, 16, "Resistance: 4.7Ω", 1);
+    SSD1306_DrawString(0, 24, "Current: 150μA", 1);
+    SSD1306_DrawString(0, 32, "Pi = 3.14159π", 1);
+    SSD1306_DrawString(0, 40, "Formula: α+β=γ", 1);
     SSD1306_Update();
+    Delay_Ms(3000);
 }
 
 void test(void)
 {
-    PixelTest();
-    Delay_Ms(500);
-    LineTest();
-    Delay_Ms(500);
-    RectTest();
-    Delay_Ms(500);
-    CircleTest();
-    Delay_Ms(500);
-    EllipseTest();
-    Delay_Ms(500);
-    RoundRectTest();
-    Delay_Ms(500);
-    TriangleTest();
-    Delay_Ms(500);
+    // PixelTest();
+    // Delay_Ms(500);
+    // LineTest();
+    // Delay_Ms(500);
+    // RectTest();
+    // Delay_Ms(500);
+    // CircleTest();
+    // Delay_Ms(500);
+    // EllipseTest();
+    // Delay_Ms(500);
+    // RoundRectTest();
+    // Delay_Ms(500);
+    // TriangleTest();
+    // Delay_Ms(500);
     StringTest();
 }
