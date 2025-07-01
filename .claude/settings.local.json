@@ -11,7 +11,8 @@
       "Bash(sudo apt-get:*)",
       "Bash(sudo apt-get install:*)",
       "Bash(grep:*)",
-      "Bash(rg:*)"
+      "Bash(rg:*)",
+      "Bash(git add:*)"
     ],
     "deny": []
   }
