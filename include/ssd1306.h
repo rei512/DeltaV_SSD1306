@@ -68,39 +68,219 @@
 #define SSD1306_CMD_SET_DEEP_SLEEP_MODE 0xE2            // Set Deep Sleep Mode 1byte: 0x01=Enter Deep Sleep Mode, 0x00=Exit Deep Sleep Mode (RESET)
 #define SSD1306_CMD_SET_NOP 0xE3                        // No Operation Command
 
+/**
+ * @brief スワップ用のダブルバッファを切り替える
+ * @note 滑らかなアニメーションを実現するために使用
+ */
 void SSD1306_Buffer_swap(void);
 
+/**
+ * @brief SSD1306 OLEDディスプレイを初期化する
+ * @note I2C通信とディスプレイの基本設定を行う
+ */
 void SSD1306_Init(void);
+
+/**
+ * @brief ディスプレイバッファをクリアする（全ピクセルを消去）
+ */
 void SSD1306_Clear(void);
+
+/**
+ * @brief バッファの内容をディスプレイに転送する
+ * @note 描画操作後に必ず呼び出す必要がある
+ */
 void SSD1306_Update(void);
+
+/**
+ * @brief バッファの全体をディスプレイに強制転送する
+ */
 void SSD1306_Update_Full(void);
 
+/**
+ * @brief ディスプレイをオンにする
+ */
 void SSD1306_DisplayOn(void);
+
+/**
+ * @brief ディスプレイをオフにする（省電力モード）
+ */
 void SSD1306_DisplayOff(void);
 
+/**
+ * @brief 全ピクセルを点灯させる（テスト用）
+ */
 void SSD1306_DisplayAllOn(void);
+
+/**
+ * @brief 通常の表示モードに戻す
+ */
 void SSD1306_DisplayNormal(void);
 
+/**
+ * @brief 表示を反転させる（白黒反転）
+ */
 void SSD1306_DisplayInverse(void);
 
+/**
+ * @brief ディスプレイのコントラストを設定する
+ * @param contrast コントラスト値 (0-255)
+ */
 void SSD1306_SetContrast(uint8_t contrast);
 
+/**
+ * @brief 指定座標にピクセルを描画する
+ * @param x X座標 (0-127)
+ * @param y Y座標 (0-63)
+ * @param color 色 (0=消去, 1=点灯)
+ */
 void SSD1306_DrawPixel(uint8_t x, uint8_t y, uint8_t color);
+
+/**
+ * @brief 2点間に直線を描画する
+ * @param x0 開始点のX座標
+ * @param y0 開始点のY座標
+ * @param x1 終了点のX座標
+ * @param y1 終了点のY座標
+ * @param color 色 (0=消去, 1=点灯)
+ */
 void SSD1306_DrawLine(uint8_t x0, uint8_t y0, uint8_t x1, uint8_t y1, uint8_t color);
+
+/**
+ * @brief 矩形の枠線を描画する
+ * @param x 左上角のX座標
+ * @param y 左上角のY座標
+ * @param width 幅
+ * @param height 高さ
+ * @param color 色 (0=消去, 1=点灯)
+ */
 void SSD1306_DrawRect(uint8_t x, uint8_t y, uint8_t width, uint8_t height, uint8_t color);
+
+/**
+ * @brief 塗りつぶされた矩形を描画する
+ * @param x 左上角のX座標
+ * @param y 左上角のY座標
+ * @param width 幅
+ * @param height 高さ
+ * @param color 色 (0=消去, 1=点灯)
+ */
 void SSD1306_FillRect(uint8_t x, uint8_t y, uint8_t width, uint8_t height, uint8_t color);
+/**
+ * @brief 円の枠線を描画する
+ * @param x0 中心のX座標
+ * @param y0 中心のY座標
+ * @param radius 半径
+ * @param color 色 (0=消去, 1=点灯)
+ */
 void SSD1306_DrawCircle(uint8_t x0, uint8_t y0, uint8_t radius, uint8_t color);
+
+/**
+ * @brief 塗りつぶされた円を描画する
+ * @param x0 中心のX座標
+ * @param y0 中心のY座標
+ * @param radius 半径
+ * @param color 色 (0=消去, 1=点灯)
+ */
 void SSD1306_FillCircle(uint8_t x0, uint8_t y0, uint8_t radius, uint8_t color);
+/**
+ * @brief 楕円の枠線を描画する
+ * @param x0 バウンディングボックス左上のX座標
+ * @param y0 バウンディングボックス左上のY座標
+ * @param x1 バウンディングボックス右下のX座標
+ * @param y1 バウンディングボックス右下のY座標
+ * @param color 色 (0=消去, 1=点灯)
+ */
 void SSD1306_DrawEllipse(uint8_t x0, uint8_t y0, uint8_t x1, uint8_t y1, uint8_t color);
+
+/**
+ * @brief 塗りつぶされた楕円を描画する
+ * @param x0 バウンディングボックス左上のX座標
+ * @param y0 バウンディングボックス左上のY座標
+ * @param x1 バウンディングボックス右下のX座標
+ * @param y1 バウンディングボックス右下のY座標
+ * @param color 色 (0=消去, 1=点灯)
+ */
 void SSD1306_FillEllipse(uint8_t x0, uint8_t y0, uint8_t x1, uint8_t y1, uint8_t color);
+/**
+ * @brief 三角形の枠線を描画する
+ * @param x0 第1頂点のX座標
+ * @param y0 第1頂点のY座標
+ * @param x1 第2頂点のX座標
+ * @param y1 第2頂点のY座標
+ * @param x2 第3頂点のX座標
+ * @param y2 第3頂点のY座標
+ * @param color 色 (0=消去, 1=点灯)
+ */
 void SSD1306_DrawTriangle(uint8_t x0, uint8_t y0, uint8_t x1, uint8_t y1, uint8_t x2, uint8_t y2, uint8_t color);
+
+/**
+ * @brief 塗りつぶされた三角形を描画する
+ * @param x0 第1頂点のX座標
+ * @param y0 第1頂点のY座標
+ * @param x1 第2頂点のX座標
+ * @param y1 第2頂点のY座標
+ * @param x2 第3頂点のX座標
+ * @param y2 第3頂点のY座標
+ * @param color 色 (0=消去, 1=点灯)
+ */
 void SSD1306_FillTriangle(uint8_t x0, uint8_t y0, uint8_t x1, uint8_t y1, uint8_t x2, uint8_t y2, uint8_t color);
+/**
+ * @brief 角の丸い矩形の枠線を描画する
+ * @param x0 左上角のX座標
+ * @param y0 左上角のY座標
+ * @param x1 右下角のX座標
+ * @param y1 右下角のY座標
+ * @param radius 角の丸みの半径
+ * @param color 色 (0=消去, 1=点灯)
+ */
 void SSD1306_DrawRoundRect(uint8_t x0, uint8_t y0, uint8_t x1, uint8_t y1, uint8_t radius, uint8_t color);
+
+/**
+ * @brief 角の丸い塗りつぶされた矩形を描画する
+ * @param x0 左上角のX座標
+ * @param y0 左上角のY座標
+ * @param x1 右下角のX座標
+ * @param y1 右下角のY座標
+ * @param radius 角の丸みの半径
+ * @param color 色 (0=消去, 1=点灯)
+ */
 void SSD1306_FillRoundRect(uint8_t x0, uint8_t y0, uint8_t x1, uint8_t y1, uint8_t radius, uint8_t color);
 
+/**
+ * @brief ASCII文字を描画する
+ * @param x 描画開始のX座標
+ * @param y 描画開始のY座標
+ * @param c 描画する文字
+ * @param color 色 (0=消去, 1=点灯)
+ */
 void SSD1306_DrawChar(uint8_t x, uint8_t y, char c, uint8_t color);
+
+/**
+ * @brief UTF-8文字を描画する（ギリシャ文字等対応）
+ * @param x 描画開始のX座標
+ * @param y 描画開始のY座標
+ * @param utf8_bytes UTF-8バイト列のポインタ
+ * @param color 色 (0=消去, 1=点灯)
+ */
 void SSD1306_DrawCharUTF8(uint8_t x, uint8_t y, const uint8_t *utf8_bytes, uint8_t color);
+
+/**
+ * @brief 文字列を描画する（UTF-8対応）
+ * @param x 描画開始のX座標
+ * @param y 描画開始のY座標
+ * @param str 描画する文字列のポインタ
+ * @param color 色 (0=消去, 1=点灯)
+ */
 void SSD1306_DrawString(uint8_t x, uint8_t y, const char *str, uint8_t color);
+
+/**
+ * @brief ビットマップ画像を描画する
+ * @param x 描画開始のX座標
+ * @param y 描画開始のY座標
+ * @param bitmap ビットマップデータのポインタ
+ * @param width ビットマップの幅
+ * @param height ビットマップの高さ
+ * @param color 色 (0=消去, 1=点灯)
+ */
 void SSD1306_DrawBitmap(uint8_t x, uint8_t y, const uint8_t *bitmap, uint8_t width, uint8_t height, uint8_t color);
 
 
