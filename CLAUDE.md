@@ -76,3 +76,26 @@ The project uses 7-bit I2C addressing with the CH32X035's I2C peripheral. All di
 - All graphics operations require `SSD1306_Update()` to transfer buffer to display
 - Serial debugging available at 115200 baud via USART
 - Hardware connection requires connecting PA10-PA10 and PA11-PA11 between boards for I2C communication testing
+
+## Performance Optimizations
+
+This library implements several advanced optimization techniques (detailed in Performance_Algorithms.md):
+- **Dirty Region Tracking**: Reduces I2C transfers by 70-90%
+- **Double Buffering**: Eliminates visual tearing and enables smooth animations
+- **Burst I2C Transfers**: Minimizes communication overhead
+- **Optimized Graphics Algorithms**: Bresenham line/circle drawing with inline pixel operations
+- **UTF-8 Font Support**: Greek characters and special symbols with fast lookup
+
+## Testing and Demonstration Functions
+
+- `FunctionTest()`: Comprehensive graphics primitives testing
+- `smooth_animation()`: 60+ FPS animation demonstrations  
+- `ClockTest()`: Digital and analog clock with real-time updates
+- Individual test functions: `PixelTest()`, `LineTest()`, `RectTest()`, `CircleTest()`, `EllipseTest()`, `TriangleTest()`, `FontTest()`
+
+## Key Configuration Constants
+
+- Display size: 128×64 pixels (SSD1306_WIDTH, SSD1306_HEIGHT)
+- Buffer size: 1024 bytes per buffer (double buffering = 2KB total)
+- Font: 8×8 pixel ASCII + Greek characters
+- I2C frequency: Up to 800kHz Fast Mode

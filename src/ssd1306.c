@@ -1,4 +1,3 @@
-#include "debug.h"
 #include <string.h>
 #include <stdint.h>
 
@@ -6,25 +5,16 @@
 #include "ssd1306_HAL.h"
 #include "ssd1306_font.h"
 
-static uint8_t buffer1[SSD1306_WIDTH * SSD1306_HEIGHT / 8];
-static uint8_t buffer2[SSD1306_WIDTH * SSD1306_HEIGHT / 8];
+static uint8_t buffer1[SSD1306_WIDTH * SSD1306_HEIGHT / 8] = {0};
+static uint8_t buffer2[SSD1306_WIDTH * SSD1306_HEIGHT / 8] = {0};
 
 static uint8_t *buffer = buffer1;         // Current drawing buffer
 static uint8_t *display_buffer = buffer2; // Last displayed buffer
 
-// Dirty region tracking for partial updates
-static uint8_t dirty_pages = 0xFF; // Bitmask of dirty pages (8 pages for 64px height)
-static uint8_t dirty_left = 0, dirty_right = SSD1306_WIDTH - 1;
+// Force full update flag for initialization
 static uint8_t force_full_update = 1;
 
-void ssdtest1(void)
-{
-    memcpy(buffer, ascii_font, SSD1306_BUFFER_SIZE);
-}
-
-// void ssdtest2(void) {
-//     memcpy(buffer, ascii_font, sizeof(ascii_font)-SSD1306_BUFFER_SIZE);
-// }
+//Frame Rate = 470k/(DCLK * MUX * CONTRAST)
 
 void SSD1306_Buffer_swap(void)
 {
@@ -33,56 +23,8 @@ void SSD1306_Buffer_swap(void)
     buffer = display_buffer;
     display_buffer = temp;
 
-    // Reset dirty tracking
-    dirty_pages = 0;
-    dirty_left = SSD1306_WIDTH;
-    dirty_right = 0;
+    // Reset force update flag
     force_full_update = 0;
-}
-
-// Mark region as dirty for partial updates
-static void mark_dirty_region(uint8_t x, uint8_t y, uint8_t w, uint8_t h)
-{
-    if (force_full_update)
-        return;
-
-    // Bounds checking
-    if (x >= SSD1306_WIDTH || y >= SSD1306_HEIGHT)
-        return;
-    if (w == 0 || h == 0)
-        return;
-
-    // Clamp to display bounds
-    if (x + w > SSD1306_WIDTH)
-        w = SSD1306_WIDTH - x;
-    if (y + h > SSD1306_HEIGHT)
-        h = SSD1306_HEIGHT - y;
-
-    uint8_t page_start = y >> 3;
-    uint8_t page_end = (y + h - 1) >> 3;
-    uint8_t x_end = x + w - 1;
-
-    // Update dirty page mask
-    for (uint8_t p = page_start; p <= page_end && p < 8; p++)
-    {
-        dirty_pages |= (1 << p);
-    }
-
-    // Update dirty column range
-    if (dirty_left > dirty_right)
-    {
-        // First dirty region - initialize range
-        dirty_left = x;
-        dirty_right = x_end;
-    }
-    else
-    {
-        // Expand existing range
-        if (x < dirty_left)
-            dirty_left = x;
-        if (x_end > dirty_right)
-            dirty_right = x_end;
-    }
 }
 
 void SSD1306_Init(void)
@@ -110,7 +52,7 @@ void SSD1306_Init(void)
     tx_buffer[7] = SSD1306_CMD_SET_CHARGE_PUMP;      // Set charge pump
     tx_buffer[8] = 0x14;                             // Enable charge pump
     tx_buffer[9] = SSD1306_CMD_SET_PRECHARGE_PERIOD; // Set pre-charge period
-    tx_buffer[10] = 0xFF;                            // Pre-charge period
+    tx_buffer[10] = 0x11;                            // Pre-charge period
     SSD1306_IIC_HAL(SSD1306_MODE_COMMAND, tx_buffer, 11);
 
     tx_buffer[0] = SSD1306_CMD_SET_MEMORY_ADDRESSING_MODE;     // Set memory addressing mode
@@ -128,72 +70,92 @@ void SSD1306_Init(void)
 
     SSD1306_IIC_HAL(SSD1306_MODE_COMMAND, tx_buffer, 11);
 
-    Delay_Ms(100); // Wait for the display to initialize
+    SSD1306_Delay_Ms_HAL(100); // Wait for the display to initialize
 
     tx_buffer[0] = SSD1306_CMD_SET_CONTRAST;           // Set contrast control
-    tx_buffer[1] = 0xCF;                               // Contrast value
+    tx_buffer[1] = 0x8F;                               // Contrast value
     tx_buffer[2] = SSD1306_CMD_SET_DISPLAY_ALL_NORMAL; // Set display to normal mode
     tx_buffer[3] = SSD1306_CMD_SET_NORMAL_DISPLAY;     // Set normal display
     tx_buffer[4] = SSD1306_CMD_SET_SCROLL_STOP;        // Stop any scrolling
     tx_buffer[5] = SSD1306_CMD_SET_DISPLAY_ON;         // Turn on the display
     SSD1306_IIC_HAL(SSD1306_MODE_COMMAND, tx_buffer, 6);
 
-    // Initialize buffers and dirty tracking
+    // Initialize buffers
     SSD1306_Clear();
     force_full_update = 1; // Force first update to be full
+    SSD1306_Update();
 }
 
 void SSD1306_Clear(void)
 {
     memset(buffer, 0, SSD1306_BUFFER_SIZE);
-    // Mark entire display as dirty
-    dirty_pages = 0xFF;
-    dirty_left = 0;
-    dirty_right = SSD1306_WIDTH - 1;
 }
 
 void SSD1306_Update(void)
 {
-    if (dirty_pages == 0 && !force_full_update)
-    {
-        return; // Nothing to update
-    }
-
-    uint8_t cmd_buffer[4];
-    uint8_t update_left, update_right;
-
     if (force_full_update)
     {
-        // Full screen update
-        update_left = 0;
-        update_right = SSD1306_WIDTH - 1;
+        // Force full update on first call after init
+        SSD1306_Update_Full();
+        return;
     }
-    else
+
+    // Compare buffers and find changed regions
+    uint8_t changed_pages[8] = {0}; // Track which pages have changes
+    uint8_t page_ranges[8][2];      // [page][0] = start_col, [page][1] = end_col
+    uint8_t has_changes = 0;
+
+    // Initialize page ranges
+    for (uint8_t p = 0; p < 8; p++)
     {
-        // Partial update - check if we have valid dirty region
-        if (dirty_left > dirty_right)
-        {
-            // No valid dirty region, return
-            dirty_pages = 0;
-            return;
-        }
-        update_left = dirty_left;
-        update_right = dirty_right;
+        page_ranges[p][0] = SSD1306_WIDTH; // start_col (invalid initially)
+        page_ranges[p][1] = 0;             // end_col
     }
 
-    // Set column address range for burst transfer
-    cmd_buffer[0] = SSD1306_CMD_SET_COLUMN_ADDRESS;
-    cmd_buffer[1] = update_left;
-    cmd_buffer[2] = update_right;
-    SSD1306_IIC_HAL(SSD1306_MODE_COMMAND, cmd_buffer, 3);
+    // Compare buffers byte by byte
+    for (uint16_t i = 0; i < SSD1306_BUFFER_SIZE; i++)
+    {
+        if (buffer[i] != display_buffer[i])
+        {
+            has_changes = 1;
 
-    // Process pages that need updating
-    uint8_t pages_to_update = force_full_update ? 0xFF : dirty_pages;
+            // Calculate page and column from buffer index
+            uint8_t page = i / SSD1306_WIDTH;
+            uint8_t col = i % SSD1306_WIDTH;
 
+            // Mark page as changed
+            changed_pages[page] = 1;
+
+            // Update column range for this page
+            if (page_ranges[page][0] > col)
+                page_ranges[page][0] = col;
+            if (page_ranges[page][1] < col)
+                page_ranges[page][1] = col;
+        }
+    }
+
+    if (!has_changes)
+    {
+        return; // No changes to update
+    }
+
+    uint8_t cmd_buffer[3];
+
+    // Update only changed pages
     for (uint8_t page = 0; page < 8; page++)
     {
-        if (!(pages_to_update & (1 << page)))
+        if (!changed_pages[page])
             continue;
+
+        uint8_t start_col = page_ranges[page][0];
+        uint8_t end_col = page_ranges[page][1];
+        uint8_t width = end_col - start_col + 1;
+
+        // Set column address range for this page
+        cmd_buffer[0] = SSD1306_CMD_SET_COLUMN_ADDRESS;
+        cmd_buffer[1] = start_col;
+        cmd_buffer[2] = end_col;
+        SSD1306_IIC_HAL(SSD1306_MODE_COMMAND, cmd_buffer, 3);
 
         // Set page address
         cmd_buffer[0] = SSD1306_CMD_SET_PAGE_ADDRESS;
@@ -201,48 +163,44 @@ void SSD1306_Update(void)
         cmd_buffer[2] = page;
         SSD1306_IIC_HAL(SSD1306_MODE_COMMAND, cmd_buffer, 3);
 
-        // Send entire row in one burst transfer
-        uint16_t start_idx = page * SSD1306_WIDTH + update_left;
-        uint8_t width = update_right - update_left + 1;
+        // Send changed region data
+        uint16_t start_idx = page * SSD1306_WIDTH + start_col;
         SSD1306_IIC_HAL(SSD1306_MODE_DATA, &buffer[start_idx], width);
 
-        // Copy updated region to display buffer for differential comparison
+        // Update display buffer for changed region
         memcpy(&display_buffer[start_idx], &buffer[start_idx], width);
     }
-
-    // Reset dirty tracking
-    dirty_pages = 0;
-    dirty_left = SSD1306_WIDTH;
-    dirty_right = 0;
-    force_full_update = 0;
 }
 
-// Fast full screen update (for initialization)
+// Full screen update writing all buffer data page by page
 void SSD1306_Update_Full(void)
 {
     uint8_t cmd_buffer[3];
 
-    // Set full screen address range
-    cmd_buffer[0] = SSD1306_CMD_SET_COLUMN_ADDRESS;
-    cmd_buffer[1] = 0;
-    cmd_buffer[2] = SSD1306_WIDTH - 1;
-    SSD1306_IIC_HAL(SSD1306_MODE_COMMAND, cmd_buffer, 3);
+    // Write all pages (0-7) with full width
+    for (uint8_t page = 0; page < 8; page++)
+    {
+        // Set column address range for full width
+        cmd_buffer[0] = SSD1306_CMD_SET_COLUMN_ADDRESS;
+        cmd_buffer[1] = 0;
+        cmd_buffer[2] = SSD1306_WIDTH - 1;
+        SSD1306_IIC_HAL(SSD1306_MODE_COMMAND, cmd_buffer, 3);
 
-    cmd_buffer[0] = SSD1306_CMD_SET_PAGE_ADDRESS;
-    cmd_buffer[1] = 0;
-    cmd_buffer[2] = (SSD1306_HEIGHT / 8) - 1;
-    SSD1306_IIC_HAL(SSD1306_MODE_COMMAND, cmd_buffer, 3);
+        // Set page address for current page
+        cmd_buffer[0] = SSD1306_CMD_SET_PAGE_ADDRESS;
+        cmd_buffer[1] = page;
+        cmd_buffer[2] = page;
+        SSD1306_IIC_HAL(SSD1306_MODE_COMMAND, cmd_buffer, 3);
 
-    // Send entire buffer in one burst
-    SSD1306_IIC_HAL(SSD1306_MODE_DATA, buffer, SSD1306_BUFFER_SIZE);
+        // Send entire page data (128 bytes)
+        uint16_t start_idx = page * SSD1306_WIDTH;
+        SSD1306_IIC_HAL(SSD1306_MODE_DATA, &buffer[start_idx], SSD1306_WIDTH);
 
-    // Copy to display buffer
-    memcpy(display_buffer, buffer, SSD1306_BUFFER_SIZE);
+        // Update display buffer for this page
+        memcpy(&display_buffer[start_idx], &buffer[start_idx], SSD1306_WIDTH);
+    }
 
-    // Reset dirty tracking
-    dirty_pages = 0;
-    dirty_left = SSD1306_WIDTH;
-    dirty_right = 0;
+    // Reset force update flag
     force_full_update = 0;
 }
 
@@ -282,6 +240,14 @@ void SSD1306_DisplayInverse(void)
     SSD1306_IIC_HAL(SSD1306_MODE_COMMAND, tx_buffer, 1);
 }
 
+void SSD1306_SetContrast(uint8_t contrast) {
+    // Set contrast control command
+    uint8_t tx_buffer[2];
+    tx_buffer[0] = SSD1306_CMD_SET_CONTRAST;
+    tx_buffer[1] = contrast; // Contrast value (0-255)
+    SSD1306_IIC_HAL(SSD1306_MODE_COMMAND, tx_buffer, 2);
+}
+
 void SSD1306_DrawPixel(uint8_t x, uint8_t y, uint8_t color)
 {
     if (x >= SSD1306_WIDTH || y >= SSD1306_HEIGHT)
@@ -297,19 +263,10 @@ void SSD1306_DrawPixel(uint8_t x, uint8_t y, uint8_t color)
     {
         buffer[x + (y / 8) * SSD1306_WIDTH] &= ~(1 << (y % 8)); // Clear pixel
     }
-
-    // Mark this region as dirty
-    mark_dirty_region(x, y, 1, 1);
 }
 
 void SSD1306_DrawLine(uint8_t x0, uint8_t y0, uint8_t x1, uint8_t y1, uint8_t color)
 {
-    // Mark dirty region once for entire line
-    uint8_t min_x = (x0 < x1) ? x0 : x1;
-    uint8_t max_x = (x0 > x1) ? x0 : x1;
-    uint8_t min_y = (y0 < y1) ? y0 : y1;
-    uint8_t max_y = (y0 > y1) ? y0 : y1;
-    mark_dirty_region(min_x, min_y, max_x - min_x + 1, max_y - min_y + 1);
 
     // Fast Bresenham's algorithm with inline pixel drawing
     int dx = (int)x1 - (int)x0;
@@ -324,7 +281,7 @@ void SSD1306_DrawLine(uint8_t x0, uint8_t y0, uint8_t x1, uint8_t y1, uint8_t co
 
     while (1)
     {
-        // Inline pixel drawing - don't call mark_dirty_region for each pixel
+        // Inline pixel drawing for performance
         if (x0 < SSD1306_WIDTH && y0 < SSD1306_HEIGHT)
         {
             if (color)
@@ -772,16 +729,13 @@ void SSD1306_DrawChar(uint8_t x, uint8_t y, char c, uint8_t color)
 
     const uint8_t *font = ascii_font[c - 32]; // Get the font data for the character
 
-    // Mark dirty region for character
-    mark_dirty_region(x, y, 8, 8);
-
     for (uint8_t i = 0; i < 8; i++)
     {
         for (uint8_t j = 0; j < 8; j++)
         {
             if (font[i] & (1 << j))
             {
-                // Direct pixel drawing to avoid multiple dirty region marks
+                // Direct pixel drawing for performance
                 if (x + i < SSD1306_WIDTH && y + j < SSD1306_HEIGHT)
                 {
                     if (color)
@@ -814,16 +768,13 @@ void SSD1306_DrawCharUTF8(uint8_t x, uint8_t y, const uint8_t *utf8_bytes, uint8
 
     const uint8_t *font = extended_font[font_index];
 
-    // Mark dirty region for character
-    mark_dirty_region(x, y, 8, 8);
-
     for (uint8_t i = 0; i < 8; i++)
     {
         for (uint8_t j = 0; j < 8; j++)
         {
             if (font[i] & (1 << j))
             {
-                // Direct pixel drawing to avoid multiple dirty region marks
+                // Direct pixel drawing for performance
                 if (x + i < SSD1306_WIDTH && y + j < SSD1306_HEIGHT)
                 {
                     if (color)

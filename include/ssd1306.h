@@ -83,6 +83,8 @@ void SSD1306_DisplayNormal(void);
 
 void SSD1306_DisplayInverse(void);
 
+void SSD1306_SetContrast(uint8_t contrast);
+
 void SSD1306_DrawPixel(uint8_t x, uint8_t y, uint8_t color);
 void SSD1306_DrawLine(uint8_t x0, uint8_t y0, uint8_t x1, uint8_t y1, uint8_t color);
 void SSD1306_DrawRect(uint8_t x, uint8_t y, uint8_t width, uint8_t height, uint8_t color);
@@ -101,7 +103,5 @@ void SSD1306_DrawCharUTF8(uint8_t x, uint8_t y, const uint8_t *utf8_bytes, uint8
 void SSD1306_DrawString(uint8_t x, uint8_t y, const char *str, uint8_t color);
 void SSD1306_DrawBitmap(uint8_t x, uint8_t y, const uint8_t *bitmap, uint8_t width, uint8_t height, uint8_t color);
 
-void ssdtest1(void);
-void ssdtest2(void);
 
 #endif
