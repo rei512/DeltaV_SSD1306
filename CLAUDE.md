@@ -65,33 +65,33 @@ The project uses 7-bit I2C addressing with the CH32X035's I2C peripheral. All di
 
 ## Key Functions and Entry Points
 
-- `main()`: src/main.c:39 - System initialization and demo loop
+- `main()`: src/main.c:89 - System initialization and demo loop
 - `SSD1306_Init()`: Initialize display and I2C communication
-- `test()`: src/main.c:269 - Runs all graphics demonstration tests
-- Individual test functions: `PixelTest()`, `LineTest()`, `RectTest()`, etc.
+- `FunctionTest()`: src/main.c:348 - Runs comprehensive graphics primitives testing
+- Individual test functions: `PixelTest()`, `LineTest()`, `RectTest()`, `CircleTest()`, `EllipseTest()`, `TriangleTest()`, `StringTest()`, `RoundRectTest()`
 
 ## Development Notes
 
 - The project demonstrates proper embedded C structure with HAL abstraction
 - All graphics operations require `SSD1306_Update()` to transfer buffer to display
 - Serial debugging available at 115200 baud via USART
-- Hardware connection requires connecting PA10-PA10 and PA11-PA11 between boards for I2C communication testing
+- I2C pins PA10 (SCL) and PA11 (SDA) connect to SSD1306 display
+- Serial debugging available at 115200 baud via USART for development
 
 ## Performance Optimizations
 
-This library implements several advanced optimization techniques (detailed in Performance_Algorithms.md):
-- **Dirty Region Tracking**: Reduces I2C transfers by 70-90%
+This library implements several optimization techniques:
 - **Double Buffering**: Eliminates visual tearing and enables smooth animations
-- **Burst I2C Transfers**: Minimizes communication overhead
-- **Optimized Graphics Algorithms**: Bresenham line/circle drawing with inline pixel operations
-- **UTF-8 Font Support**: Greek characters and special symbols with fast lookup
+- **Hardware Abstraction Layer**: Enables portability across different microcontrollers
+- **Optimized Graphics Algorithms**: Bresenham line/circle drawing algorithms
+- **UTF-8 Font Support**: ASCII characters and special symbols with 8×8 pixel font
 
 ## Testing and Demonstration Functions
 
-- `FunctionTest()`: Comprehensive graphics primitives testing
-- `smooth_animation()`: 60+ FPS animation demonstrations  
-- `ClockTest()`: Digital and analog clock with real-time updates
-- Individual test functions: `PixelTest()`, `LineTest()`, `RectTest()`, `CircleTest()`, `EllipseTest()`, `TriangleTest()`, `FontTest()`
+- `FunctionTest()`: src/main.c:348 - Comprehensive graphics primitives testing
+- `smooth_animation()`: src/main.c:400 - Smooth animation demonstrations  
+- `ClockTest()`: src/main.c:425 - Digital and analog clock displays
+- Individual test functions: `PixelTest()`, `LineTest()`, `RectTest()`, `CircleTest()`, `EllipseTest()`, `TriangleTest()`, `StringTest()`, `RoundRectTest()`
 
 ## Key Configuration Constants
 
