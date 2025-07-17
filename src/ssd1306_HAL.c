@@ -1,3 +1,27 @@
+/*
+ * DeltaV_SSD1306 Library
+ * Copyright (c) 2024 rei_512_, DeltaV Lab
+ *
+ * This software is provided 'as-is', without any express or implied warranty.
+ * Permission is hereby granted to use, copy, modify, and/or distribute this
+ * software for any purpose with or without fee, provided that the above
+ * copyright notice and this permission notice appear in all copies.
+ *
+ * SPDX-License-Identifier: MIT
+ *
+ * For details, see: https://opensource.org/licenses/MIT
+ *
+ * Author: rei_512_
+ * Date: 2024-07-01
+ *
+ * Description:
+ * Header file for SSD1306 HAL (Hardware Abstraction Layer).
+ * This file contains function declarations for I2C communication and delay functions.
+ * It is used to abstract the hardware-specific details of the SSD1306 OLED display.
+ * This file is part of the DeltaV_SSD1306 library.
+ * This library provides functions for drawing graphics and text on the SSD1306 OLED display.
+ */
+
 #include "debug.h"
 
 #include "ssd1306_HAL.h"

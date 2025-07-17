@@ -1,26 +1,22 @@
-/********************************** (C) COPYRIGHT *******************************
- * File Name          : main.c
- * Author             : WCH
- * Version            : V1.0.0
- * Date               : 2023/04/06
- * Description        : Main program body.
- *********************************************************************************
- * Copyright (c) 2021 Nanjing Qinheng Microelectronics Co., Ltd.
- * Attention: This software (modified or not) and binary are used for
- * microcontroller manufactured by Nanjing Qinheng Microelectronics.
- *******************************************************************************/
-
 /*
- *@Note
- *7-bit addressing mode, master/slave mode, transceiver routine:
- *I2C1_SCL(PA10)\I2C1_SDA(PA11).
- *This routine demonstrates that Master sends and Slave receives.
- *Note: The two boards download the Master and Slave programs respectively,
- *and power on at the same time.During the I2C communication process,
- *the pins are open drain outputs.
- *    Hardware connection:PA10 -- PA10
- *                        PA11 -- PA11
+ * DeltaV_SSD1306 Library Example
+ * Copyright (c) 2024 rei_512_, DeltaV Lab
  *
+ * This software is provided 'as-is', without any express or implied warranty.
+ * Permission is hereby granted to use, copy, modify, and/or distribute this
+ * software for any purpose with or without fee, provided that the above
+ * copyright notice and this permission notice appear in all copies.
+ *
+ * SPDX-License-Identifier: MIT
+ *
+ * For details, see: https://opensource.org/licenses/MIT
+ *
+ * Author: rei_512_
+ * Date: 2024-07-01
+ *
+ * Description:
+ *   Example code for SSD1306 128x64 OLED display on CH32 microcontroller.
+ *   Demonstrates basic graphics, text, and clock animation.
  */
 
 #include "debug.h"
