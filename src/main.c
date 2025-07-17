@@ -1,26 +1,22 @@
-/********************************** (C) COPYRIGHT *******************************
- * File Name          : main.c
- * Author             : WCH
- * Version            : V1.0.0
- * Date               : 2023/04/06
- * Description        : Main program body.
- *********************************************************************************
- * Copyright (c) 2021 Nanjing Qinheng Microelectronics Co., Ltd.
- * Attention: This software (modified or not) and binary are used for
- * microcontroller manufactured by Nanjing Qinheng Microelectronics.
- *******************************************************************************/
-
 /*
- *@Note
- *7-bit addressing mode, master/slave mode, transceiver routine:
- *I2C1_SCL(PA10)\I2C1_SDA(PA11).
- *This routine demonstrates that Master sends and Slave receives.
- *Note: The two boards download the Master and Slave programs respectively,
- *and power on at the same time.During the I2C communication process,
- *the pins are open drain outputs.
- *    Hardware connection:PA10 -- PA10
- *                        PA11 -- PA11
+ * DeltaV_SSD1306 Library Example
+ * Copyright (c) 2024 rei_512_, DeltaV Lab
  *
+ * This software is provided 'as-is', without any express or implied warranty.
+ * Permission is hereby granted to use, copy, modify, and/or distribute this
+ * software for any purpose with or without fee, provided that the above
+ * copyright notice and this permission notice appear in all copies.
+ *
+ * SPDX-License-Identifier: MIT
+ *
+ * For details, see: https://opensource.org/licenses/MIT
+ *
+ * Author: rei_512_
+ * Date: 2024-07-01
+ *
+ * Description:
+ *   Example code for SSD1306 128x64 OLED display on CH32 microcontroller.
+ *   Demonstrates basic graphics, text, and clock animation.
  */
 
 #include "debug.h"
@@ -414,11 +410,9 @@ void smooth_animation(void)
         SSD1306_DrawRect(20, 20, 80, 30, 1);
         sprintf((char *)str, "Frame: %d", frame);
         SSD1306_DrawString(0, 0, (const char *)str, 1);
-        GPIO_WriteBit(GPIOA, GPIO_Pin_0, Bit_SET);
 
         // Single optimized update
         SSD1306_Update(); // Only changed regions transmitted
-        GPIO_WriteBit(GPIOA, GPIO_Pin_0, Bit_RESET);
     }
 }
 
@@ -428,34 +422,11 @@ void ClockTest()
     static uint8_t hours = 12;
     static uint8_t minutes = 30;
     static uint8_t seconds = 0;
-    static uint32_t last_update = 0;
 
     // Time constants
     const uint8_t analog_center_x = 96; // Right side center
     const uint8_t analog_center_y = 32; // Middle
     const uint8_t analog_radius = 30;   // Clock face radius
-
-    // Update time every second (simulated)
-    uint32_t current_time = SystemCoreClock / 1000; // Approximate milliseconds
-    if (current_time - last_update > 1000)
-    {
-        seconds++;
-        if (seconds >= 60)
-        {
-            seconds = 0;
-            minutes++;
-            if (minutes >= 60)
-            {
-                minutes = 0;
-                hours++;
-                if (hours > 12)
-                {
-                    hours = 1;
-                }
-            }
-        }
-        last_update = current_time;
-    }
 
     SSD1306_Clear();
 
@@ -473,68 +444,12 @@ void ClockTest()
     // Temperature display with Celsius symbol
     SSD1306_DrawString(0, 56, "24.5℃", 1);
 
-    // === ANALOG CLOCK (Right Side) ===
-    // Draw clock face border
-    SSD1306_DrawCircle(analog_center_x, analog_center_y, analog_radius, 1);
-
-    // Draw hour markers (12, 3, 6, 9)
-    for (int i = 0; i < 4; i++)
-    {
-        float angle = i * 90.0 * 3.14159 / 180.0; // Convert to radians
-        int x1 = analog_center_x + (analog_radius - 3) * cos(angle);
-        int y1 = analog_center_y + (analog_radius - 3) * sin(angle);
-        int x2 = analog_center_x + (analog_radius - 1) * cos(angle);
-        int y2 = analog_center_y + (analog_radius - 1) * sin(angle);
-        SSD1306_DrawLine(x1, y1, x2, y2, 1);
-    }
-
-    // Draw minute markers (small dots)
-    for (int i = 0; i < 12; i++)
-    {
-        if (i % 3 != 0)
-        {                                                           // Skip hour markers
-            float angle = i * 30.0 * 3.14159 / 180.0 - 3.14159 / 2; // -90° offset
-            int x = analog_center_x + (analog_radius - 2) * cos(angle);
-            int y = analog_center_y + (analog_radius - 2) * sin(angle);
-            SSD1306_DrawPixel(x, y, 1);
-        }
-    }
-
-    // Calculate hand angles (12 o'clock = -90 degrees)
-    float hour_angle = ((hours % 12) * 30.0 + minutes * 0.5) * 3.14159 / 180.0 - 3.14159 / 2;
-    float minute_angle = (minutes * 6.0) * 3.14159 / 180.0 - 3.14159 / 2;
-    float second_angle = (seconds * 6.0) * 3.14159 / 180.0 - 3.14159 / 2;
-
-    // Draw hour hand (thick, short)
-    int hour_x = analog_center_x + (analog_radius - 12) * cos(hour_angle);
-    int hour_y = analog_center_y + (analog_radius - 12) * sin(hour_angle);
-    SSD1306_DrawLine(analog_center_x, analog_center_y, hour_x, hour_y, 1);
-    SSD1306_DrawLine(analog_center_x - 1, analog_center_y, hour_x - 1, hour_y, 1); // Make thick
-
-    // Draw minute hand (medium length)
-    int minute_x = analog_center_x + (analog_radius - 6) * cos(minute_angle);
-    int minute_y = analog_center_y + (analog_radius - 6) * sin(minute_angle);
-    SSD1306_DrawLine(analog_center_x, analog_center_y, minute_x, minute_y, 1);
-
-    // Draw second hand (thin, long)
-    int second_x = analog_center_x + (analog_radius - 3) * cos(second_angle);
-    int second_y = analog_center_y + (analog_radius - 3) * sin(second_angle);
-    SSD1306_DrawLine(analog_center_x, analog_center_y, second_x, second_y, 1);
-
-    // Draw center dot
-    SSD1306_FillCircle(analog_center_x, analog_center_y, 2, 1);
-
-    // Draw separator line between digital and analog
     SSD1306_DrawLine(64, 0, 64, 63, 1);
 
-    // SSD1306_Update();
 
     // Animate for a few seconds to show time progression
     for (int i = 0; i < 1000; i++)
     {
-        GPIO_WriteBit(GPIOA, GPIO_Pin_0, 1);
-        // Delay_Ms(200);
-
         // Display time in HH:MM:SS format
         char time_str[16];
         sprintf(time_str, "%02d:%02d:%02d", hours, minutes, seconds);
@@ -558,14 +473,13 @@ void ClockTest()
             }
         }
 
-        // Re-draw only the changing parts (optimization)
         // Clear previous hands area
         SSD1306_FillCircle(analog_center_x, analog_center_y, analog_radius - 2, 0);
 
-        // Redraw clock face
+        // draw clock face
         SSD1306_DrawCircle(analog_center_x, analog_center_y, analog_radius, 1);
 
-        // Redraw markers
+        // draw markers
         for (int j = 0; j < 4; j++)
         {
             float angle = j * 90.0 * 3.14159 / 180.0;
@@ -576,7 +490,7 @@ void ClockTest()
             SSD1306_DrawLine(x1, y1, x2, y2, 1);
         }
 
-        // Redraw minute markers
+        // draw minute markers
         for (int j = 0; j < 12; j++)
         {
             if (j % 3 != 0)
@@ -588,22 +502,22 @@ void ClockTest()
             }
         }
 
-        // Recalculate and redraw hands
-        hour_angle = ((hours % 12) * 30.0 + minutes * 0.5) * 3.14159 / 180.0 - 3.14159 / 2;
-        minute_angle = (minutes * 6.0) * 3.14159 / 180.0 - 3.14159 / 2;
-        second_angle = (seconds * 6.0) * 3.14159 / 180.0 - 3.14159 / 2;
+        // calculate and draw hands
+        float hour_angle = ((hours % 12) * 30.0 + minutes * 0.5) * 3.14159 / 180.0 - 3.14159 / 2;
+        float minute_angle = (minutes * 6.0) * 3.14159 / 180.0 - 3.14159 / 2;
+        float second_angle = (seconds * 6.0) * 3.14159 / 180.0 - 3.14159 / 2;
 
-        hour_x = analog_center_x + (analog_radius - 12) * cos(hour_angle);
-        hour_y = analog_center_y + (analog_radius - 12) * sin(hour_angle);
+        int hour_x = analog_center_x + (analog_radius - 12) * cos(hour_angle);
+        int hour_y = analog_center_y + (analog_radius - 12) * sin(hour_angle);
         SSD1306_DrawLine(analog_center_x, analog_center_y, hour_x, hour_y, 1);
         SSD1306_DrawLine(analog_center_x - 1, analog_center_y, hour_x - 1, hour_y, 1);
 
-        minute_x = analog_center_x + (analog_radius - 6) * cos(minute_angle);
-        minute_y = analog_center_y + (analog_radius - 6) * sin(minute_angle);
+        int minute_x = analog_center_x + (analog_radius - 6) * cos(minute_angle);
+        int minute_y = analog_center_y + (analog_radius - 6) * sin(minute_angle);
         SSD1306_DrawLine(analog_center_x, analog_center_y, minute_x, minute_y, 1);
 
-        second_x = analog_center_x + (analog_radius - 3) * cos(second_angle);
-        second_y = analog_center_y + (analog_radius - 3) * sin(second_angle);
+        int second_x = analog_center_x + (analog_radius - 3) * cos(second_angle);
+        int second_y = analog_center_y + (analog_radius - 3) * sin(second_angle);
         SSD1306_DrawLine(analog_center_x, analog_center_y, second_x, second_y, 1);
 
         SSD1306_FillCircle(analog_center_x, analog_center_y, 2, 1);
@@ -613,8 +527,6 @@ void ClockTest()
         SSD1306_DrawString(analog_center_x + analog_radius - 11, analog_center_y - 3, "3", 1);
         SSD1306_DrawString(analog_center_x - 4, analog_center_y + analog_radius - 12, "6", 1);
         SSD1306_DrawString(analog_center_x - analog_radius + 4, analog_center_y - 4, "9", 1);
-        GPIO_WriteBit(GPIOA, GPIO_Pin_0, Bit_SET);
         SSD1306_Update();
-        GPIO_WriteBit(GPIOA, GPIO_Pin_0, Bit_RESET);
     }
 }
